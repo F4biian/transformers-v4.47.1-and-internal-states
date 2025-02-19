@@ -157,7 +157,14 @@ class MistralMLP(nn.Module):
         self.act_fn = ACT2FN[config.hidden_act]
 
     def forward(self, hidden_state):
-        return self.down_proj(self.act_fn(self.gate_proj(hidden_state)) * self.up_proj(hidden_state))
+        # Old:
+        # return self.down_proj(self.act_fn(self.gate_proj(hidden_state)) * self.up_proj(hidden_state))
+
+        # New:
+        a = self.act_fn(self.gate_proj(hidden_state))
+        self.activation_values_from_inserted_code = a.clone().detach()
+        down_proj = self.down_proj(a * self.up_proj(hidden_state))
+        return down_proj
 
 
 # Copied from transformers.models.llama.modeling_llama.repeat_kv

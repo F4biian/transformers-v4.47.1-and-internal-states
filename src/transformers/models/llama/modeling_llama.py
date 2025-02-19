@@ -214,7 +214,14 @@ class LlamaMLP(nn.Module):
         self.act_fn = ACT2FN[config.hidden_act]
 
     def forward(self, x):
-        down_proj = self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))
+        # Old:
+        # down_proj = self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))
+        # return down_proj
+
+        # New:
+        a = self.act_fn(self.gate_proj(x))
+        self.activation_values_from_inserted_code = a.clone().detach()
+        down_proj = self.down_proj(a * self.up_proj(x))
         return down_proj
 
 
