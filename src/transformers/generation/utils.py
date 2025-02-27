@@ -3216,6 +3216,8 @@ class GenerationMixin:
         decoder_attentions = () if (return_dict_in_generate and output_attentions) else None
         cross_attentions = () if (return_dict_in_generate and output_attentions) else None
         decoder_hidden_states = () if (return_dict_in_generate and output_hidden_states) else None
+        decoder_intermediate_activation_values = () if (return_dict_in_generate) else None
+        decoder_contextualized_embedding_vectors = () if (return_dict_in_generate) else None
 
         # if model is an encoder-decoder, retrieve encoder attention weights and hidden states
         if return_dict_in_generate and self.config.is_encoder_decoder:
@@ -3285,11 +3287,21 @@ class GenerationMixin:
                         cross_attentions += (outputs.cross_attentions,)
 
                 if output_hidden_states:
-                    decoder_hidden_states += (
-                        (outputs.decoder_hidden_states,)
-                        if self.config.is_encoder_decoder
-                        else (outputs.hidden_states,)
-                    )
+                    # decoder_hidden_states += (
+                    #     (outputs.decoder_hidden_states,)
+                    #     if self.config.is_encoder_decoder
+                    #     else (outputs.hidden_states,)
+                    # )
+
+                    cevs = ()
+                    for layer_i in range(len(outputs.hidden_states)):
+                        cevs += (outputs.hidden_states[layer_i][0][-1],)
+                    decoder_contextualized_embedding_vectors += (cevs,)
+
+                    iavs = ()
+                    for layer_i in range(len(self.model.layers)):
+                        iavs += (self.model.layers[layer_i].mlp.activation_values_from_inserted_code[0][-1],)
+                    decoder_intermediate_activation_values += (iavs,)
 
             # token selection
             if do_sample:
@@ -3340,7 +3352,7 @@ class GenerationMixin:
                     attentions=decoder_attentions,
                     hidden_states=decoder_hidden_states,
                     past_key_values=model_kwargs.get("past_key_values"),
-                )
+                ), decoder_contextualized_embedding_vectors, decoder_intermediate_activation_values
         else:
             return input_ids
 
