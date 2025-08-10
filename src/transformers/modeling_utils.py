@@ -2319,12 +2319,12 @@ class PreTrainedModel(nn.Module, ModuleUtilsMixin, GenerationMixin, PushToHubMix
         if old_num_tokens == new_num_tokens and not is_deepspeed_zero3_enabled():
             return old_lm_head
 
-        if not isinstance(old_lm_head, nn.Linear):
-            raise TypeError(
-                f"Old language model head is of type {type(old_lm_head)}, which is not an instance of {nn.Linear}. You"
-                " should either use a different resize function or make sure that `old_lm_head` are an instance of"
-                f" {nn.Linear}."
-            )
+        # if not isinstance(old_lm_head, nn.Linear):
+        #     raise TypeError(
+        #         f"Old language model head is of type {type(old_lm_head)}, which is not an instance of {nn.Linear}. You"
+        #         " should either use a different resize function or make sure that `old_lm_head` are an instance of"
+        #         f" {nn.Linear}."
+        #     )
 
         # Build new lm head
         new_lm_head_shape = (old_lm_head_dim, new_num_tokens) if not transposed else (new_num_tokens, old_lm_head_dim)
